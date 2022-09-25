@@ -1,6 +1,5 @@
 package me.derp.quantum.features.modules.misc;
 
-
 import me.derp.quantum.features.modules.Module;
 import me.derp.quantum.features.setting.Setting;
 import me.derp.quantum.util.MathUtil;
