@@ -1,2 +1,4 @@
-#a continuation of a continuation of a weird client!!!!!!!!!!!!!!!!!!
-based off : https://github.com/fan4145/quantum-src-releases
+continuation of a continuation of a weird client!!!!!!!!!!!!!!!!!!
+
+
+this client is based off https://github.com/fan4145/quantum-src-releases
