@@ -7,6 +7,7 @@ import me.derp.quantum.features.modules.client.ClickGui;
 import me.derp.quantum.features.setting.Setting;
 import me.derp.quantum.features.modules.misc.AutoGG;
 import me.derp.quantum.util.*;
+import me.derp.quantum.util.Timer;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
