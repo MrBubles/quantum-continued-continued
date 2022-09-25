@@ -33,12 +33,12 @@ public class HUD extends Module {
     private static final ResourceLocation box = new ResourceLocation("textures/gui/container/shulker_box.png");
     private static final ItemStack totem = new ItemStack(Items.TOTEM_OF_UNDYING);
     private static HUD INSTANCE = new HUD();
-    public Setting<String> gameTitle = register(new Setting("AppTitle", "Quantum Continued v0.6.1"));
+    public Setting<String> gameTitle = register(new Setting("AppTitle", "Quantum++ v0.6.2"));
     public Setting<Boolean> timestamp = register(new Setting("TimeStamps", Boolean.TRUE));
     private final Setting<Boolean> grayNess = register(new Setting("Gray", Boolean.TRUE));
     private final Setting<Boolean> renderingUp = register(new Setting("RenderingUp", Boolean.FALSE, "Orientation of the HUD-Elements."));
     private final Setting<Boolean> waterMark = register(new Setting("Watermark", Boolean.FALSE, "displays watermark"));
-    private final Setting<String> waterMarkName = register(new Setting("WaterMarkName", "Quantum Continued v0.6.1", v -> this.waterMark.getValue()));
+    private final Setting<String> waterMarkName = register(new Setting("WaterMarkName", "Quantum++ v0.6.2", v -> this.waterMark.getValue()));
     private final Setting<Boolean> arrayList = register(new Setting("ActiveModules", Boolean.FALSE, "Lists the active modules."));
     private final Setting<Boolean> coords = register(new Setting("Coords", Boolean.FALSE, "Your current coordinates"));
     private final Setting<Boolean> direction = register(new Setting("Direction", Boolean.FALSE, "The Direction you are facing."));
