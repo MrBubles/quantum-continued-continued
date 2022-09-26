@@ -204,7 +204,8 @@ public class CrystalAura
     public void onTick() {
         this.onCrystal();
     if (fastplace.getValue() && CrystalAura.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL) {
-    FastPlace.mc.rightClickDelayTimer = 0;
+    CrystalAura.mc.rightClickDelayTimer = 0;
+        }
     }
 
     @Override
@@ -213,7 +214,6 @@ public class CrystalAura
             return this.realTarget.getName();
         }
         return null;
-        }
     }
 
     public void onCrystal() {
