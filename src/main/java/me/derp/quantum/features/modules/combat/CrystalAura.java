@@ -50,6 +50,7 @@ public class CrystalAura
     private final Timer preditTimer = new Timer();
     private final Timer manualTimer = new Timer();
     public Setting<Boolean> place = this.register(new Setting<Boolean>("Place", true));
+    public Setting<Boolean> fastplace = this.register(new Setting<Boolean>("NoDelayPlace", true));
     public Setting<Float> placeDelay = this.register(new Setting<Float>("PlaceDelay", Float.valueOf(4.0f), Float.valueOf(0.0f), Float.valueOf(300.0f)));
     public Setting<Float> placeRange = this.register(new Setting<Float>("PlaceRange", Float.valueOf(4.0f), Float.valueOf(0.1f), Float.valueOf(7.0f)));
     public Setting<Float> placeWallRange = this.register(new Setting<Float>("PlaceWallRange", Float.valueOf(4.0f), Float.valueOf(0.1f), Float.valueOf(7.0f)));
@@ -202,6 +203,8 @@ public class CrystalAura
     @Override
     public void onTick() {
         this.onCrystal();
+    if (fastplace.getValue() && CrystalAura.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL) {
+    FastPlace.mc.rightClickDelayTimer = 0;
     }
 
     @Override
@@ -210,6 +213,7 @@ public class CrystalAura
             return this.realTarget.getName();
         }
         return null;
+        }
     }
 
     public void onCrystal() {
