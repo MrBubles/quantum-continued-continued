@@ -4,4 +4,5 @@ this client was made because zane liked quantum!
 
 
 original quantum | https://github.com/fan4145/quantum-src-releases
+
 btw the jar is in actions for the people who dont wanna build.
