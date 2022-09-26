@@ -60,9 +60,10 @@ public class CrystalAura
     public Setting<Boolean> packetBreak = this.register(new Setting<Boolean>("PacketBreak", true));
     public Setting<AWMode> awMode = this.register(new Setting<AWMode>("AntiWeakness", AWMode.Normal));
     public Setting<Boolean> predicts = this.register(new Setting<Boolean>("Predict", true));
-    public Setting<Boolean> cityPredict = this.register(new Setting<Boolean>("CityPredict", true));
     private final Setting<Integer> attackFactor = this.register(new Setting<Integer>("PredictDelay", 0, 0, 200));
-    public Setting<Boolean> rotate = this.register(new Setting<Boolean>("Rotate", true));
+    public Setting<Boolean> rotate = this.register(new Setting<>("Rotate", true));
+    public Setting<Boolean> yawStep = this.register(new Setting<>("YawStep", true, v->rotate.getValue()));
+    public Setting<Integer> yawSteps = this.register(new Setting<>("Step", 7, 0, 32, v->rotate.getValue() && yawStep.getValue()));
     public Setting<Float> breakDelay = this.register(new Setting<Float>("BreakDelay", Float.valueOf(4.0f), Float.valueOf(0.0f), Float.valueOf(300.0f)));
     public Setting<Float> breakRange = this.register(new Setting<Float>("BreakRange", Float.valueOf(4.0f), Float.valueOf(0.1f), Float.valueOf(7.0f)));
     public Setting<Float> breakWallRange = this.register(new Setting<Float>("BreakWallRange", Float.valueOf(4.0f), Float.valueOf(0.1f), Float.valueOf(7.0f)));
@@ -202,9 +203,16 @@ public class CrystalAura
         this.rotating = false;
     }
     @SubscribeEvent
-    public void onBlockEvent(final BlockEvent event) {
-        if (cityPredict.getValue() && getTarget() != null) {
-            if (event.pos == EntityUtil.is_cityable(getTarget(), opPlace.getValue()))      TooBeeCrystalAura.placeCrystalOnBlock(event.pos.down(), CrystalAura.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND, false, false, this.switchMode.getValue() == SwitchMode.Silent);
+    public void onPlayerWalkingUpdated(UpdateWalkingPlayerEvent event) {
+        if (event.getStage() == 0) {
+            if (rotate.getValue()) onCrystal();
+            if (rotate.getValue() && this.crystal != null) {
+                float[] angle = TooBeeCrystalAura.calculateAngles(this.crystal.getPositionVector());
+                for (int i = 0; i <= yawSteps.getValue(); i++) {
+                    Quantum.rotationManagerNew.setYaw(angle[0] / i);
+                    Quantum.rotationManagerNew.setPitch(angle[1] / i);
+                }
+            }
         }
     }
 
