@@ -5,9 +5,6 @@ import me.derp.quantum.features.gui.OyVeyGui;
 import me.derp.quantum.features.modules.client.ClickGui;
 import me.derp.quantum.features.setting.Setting;
 import me.derp.quantum.util.RenderUtil;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.util.SoundEvent;
 
 public class BooleanButton
         extends Button {
@@ -34,7 +31,7 @@ public class BooleanButton
     public void mouseClicked(int n, int n2, int n3) {
         super.mouseClicked(n, n2, n3);
         if (this.isHovering(n, n2)) {
-            mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord((SoundEvent)SoundEvents.UI_BUTTON_CLICK, (float)1.0f));
+            ((Object) me.derp.quantum.features.gui.components.items.buttons.mc.getSoundHandler()).playSound(PositionedSoundRecord.getMasterRecord((SoundEvent)SoundEvents.UI_BUTTON_CLICK, (float)1.0f));
         }
     }
 
