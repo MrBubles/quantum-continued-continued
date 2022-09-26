@@ -1,6 +1,7 @@
 package me.derp.quantum.util;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
+import me.derp.quantum.util.LuigiRotationUtil;
 import me.derp.quantum.features.modules.client.ClickGui;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -8,6 +9,7 @@ import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec2f;
 
 public class RotationUtil
         implements Util {
@@ -44,6 +46,17 @@ public class RotationUtil
 
     public static boolean isInFov(Entity entity) {
         return entity != null && (mc.player.getDistanceSq(entity) < 4.0 || RotationUtil.yawDist(entity) < (double) (RotationUtil.getHalvedfov() + 2.0f));
+    }
+
+    public static Vec2f getRotationTo(Vec3d vec3d, Vec3d vec3d2) {
+        return RotationUtil.getRotationFromVec(vec3d.subtract(vec3d2));
+    }
+
+    public static Vec2f getRotationFromVec(Vec3d vec3d) {
+        double d = Math.hypot(vec3d.x, vec3d.z);
+        float f = (float)LuigiRotationUtil.normalizeAngle(Math.toDegrees(Math.atan2(vec3d.z, vec3d.x)) - 90.0);
+        float f2 = (float)LuigiRotationUtil.normalizeAngle(Math.toDegrees(-Math.atan2(vec3d.y, d)));
+        return new Vec2f(f, f2);
     }
 
     public static float getFov() {
