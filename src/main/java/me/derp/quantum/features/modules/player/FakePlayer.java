@@ -11,20 +11,35 @@ import java.util.Random;
 import java.util.UUID;
 
 public class FakePlayer extends Module {
-    public Setting<Boolean> hollow = this.register(new Setting("Move", false));
+    public List<Integer> fakePlayerIdList = new ArrayList<Integer>();
+    public Setting<Boolean> dotgod = this.register(new Setting("DotGod", false));
+    private static FakePlayer INSTANCE = new FakePlayer();
+
 
     public FakePlayer() {
         super("FakePlayer", "Spawns fake player", Category.PLAYER, false, false, false);
+        this.setInstance();
     }
 
     private EntityOtherPlayerMP otherPlayer;
+
+    public static FakePlayer getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new FakePlayer();
+        }
+        return INSTANCE;
+    }
+
+    private void setInstance() {
+        INSTANCE = this;
+    }
 
     public void onTick() {
         if (otherPlayer != null) {
             Random random = new Random();
             otherPlayer.moveForward = mc.player.moveForward + (random.nextInt(5) / 10F);
             otherPlayer.moveStrafing = mc.player.moveStrafing + (random.nextInt(5) / 10F);
-            if (hollow.getValue()) travel(otherPlayer.moveStrafing, otherPlayer.moveVertical, otherPlayer.moveForward);
+            if (dotgod.getValue()) travel(otherPlayer.moveStrafing, otherPlayer.moveVertical, otherPlayer.moveForward);
         }
     }
 
@@ -49,9 +64,9 @@ public class FakePlayer extends Module {
 
         otherPlayer.moveRelative(strafe, vertical, forward, f2);
         otherPlayer.move(MoverType.SELF, otherPlayer.motionX, otherPlayer.motionY, otherPlayer.motionZ);
-        otherPlayer.motionX *= f1;
+        otherPlayer.motionX *= (double) f1;
         otherPlayer.motionY *= 0.800000011920929D;
-        otherPlayer.motionZ *= f1;
+        otherPlayer.motionZ *= (double) f1;
 
         if (!otherPlayer.hasNoGravity()) {
             otherPlayer.motionY -= 0.02D;
@@ -68,17 +83,27 @@ public class FakePlayer extends Module {
             toggle();
             return;
         }
+        this.fakePlayerIdList = new ArrayList<Integer>();
+
+        this.addFakePlayer(-100);
+    }
+
+    public void addFakePlayer(int entityId){
         if (otherPlayer == null) {
-            otherPlayer = new EntityOtherPlayerMP(mc.world, new GameProfile(UUID.randomUUID(), "TestDummy"));
+            otherPlayer = new EntityOtherPlayerMP(mc.world, new GameProfile(UUID.randomUUID(), "Scott"));
             otherPlayer.copyLocationAndAnglesFrom(mc.player);
             otherPlayer.inventory.copyInventory(mc.player.inventory);
         }
-        mc.world.spawnEntity(otherPlayer);
+        mc.world.addEntityToWorld(entityId, otherPlayer);
+        this.fakePlayerIdList.add(entityId);
 
     }
 
     @Override
     public void onDisable() {
+        for (int id : this.fakePlayerIdList) {
+            FakePlayer.mc.world.removeEntityFromWorld(id);
+        }
         if (otherPlayer != null) {
             mc.world.removeEntity(otherPlayer);
             otherPlayer = null;
