@@ -97,7 +97,6 @@ extends Module {
             HoleSnap.mc.player.motionZ = 0.0;
         }
         if (this.SpeedCheck.getValue().booleanValue()) {
-        return;
         }
         if (HoleSnap.fullNullCheck()) {
             return;
