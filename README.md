@@ -7,7 +7,7 @@ original quantum | https://github.com/fan4145/quantum-src-releases
 ## Installing
 
 1. Download the latest version of [Minecraft Forge](https://files.minecraftforge.net/) for the corresponding 
-Quantum Minecraft version (this is important if you want to run older versions of Quantum).
+Quantum Minecraft version (1.12.2).
 2. Download the latest Quantum build by going to the [releases](https://github.com/MrBubblegum/quantum-continued-continued/releases) section.
 Do NOT install the jar that contains `sources`. That one contains the source code and isn't compiled.
 3. Place the Quantum jar into the `.minecraft/mods/` directory. If you want to organize by Minecraft version, 
