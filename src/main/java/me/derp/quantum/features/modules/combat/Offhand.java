@@ -26,69 +26,123 @@ import org.lwjgl.input.Mouse;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class Offhand
+public class OffhandRewrite
         extends Module {
-    private static Offhand instance;
-    private final Queue<InventoryUtil.Task> taskList = new ConcurrentLinkedQueue<>();
-    private final Timer timer = new Timer();
-    private final Timer secondTimer = new Timer();
-    public Setting<Boolean> crystal = this.register(new Setting<>("Crystal", true));
-    public Setting<Float> crystalHealth = this.register(new Setting<>("CrystalHP", 13.0f, 0.1f, 36.0f));
-    public Setting<Float> crystalHoleHealth = this.register(new Setting<>("CrystalHoleHP", 3.5f, 0.1f, 36.0f));
-    public Setting<Boolean> gapple = this.register(new Setting<>("Gapple", true));
-    public Setting<Boolean> antiGappleFail = this.register(new Setting<>("AntiGapFail", false));
-    public Setting<Boolean> armorCheck = this.register(new Setting<>("ArmorCheck", true));
-    public Setting<Integer> actions = this.register(new Setting<>("Packets", 4, 1, 4));
-    public Setting<Boolean> fallDistance = this.register(new Setting<>("FallDistance", false));
-    public Setting<Float> Height = this.register(new Setting<>("Height", 0F, 0F, 30F, v -> this.fallDistance.getValue()));
-    public Mode2 currentMode = Mode2.TOTEMS;
-    public int totems = 0;
-    public int crystals = 0;
-    public int gapples = 0;
-    public int lastTotemSlot = -1;
-    public int lastGappleSlot = -1;
-    public int lastCrystalSlot = -1;
-    public int lastObbySlot = -1;
-    public int lastWebSlot = -1;
-    public boolean holdingCrystal = false;
-    public boolean holdingTotem = false;
-    public boolean holdingGapple = false;
-    public boolean didSwitchThisTick = false;
-    private boolean second = false;
-    private boolean switchedForHealthReason = false;
+    private static OffhandRewrite instance;
+    private final Queue<InventoryUtil.Task> taskList;
+    private final TimerUtil timer;
+    private final TimerUtil secondTimer;
+    private final TimerUtil thirdtimer;
+    public Mode2 currentMode;
+    public int switchval;
+    public int totems;
+    public int crystals;
+    public int gapples;
+    public int lastTotemSlot;
+    public int lastGappleSlot;
+    public int lastCrystalSlot;
+    public int lastObbySlot;
+    public int lastWebSlot;
+    public boolean holdingCrystal;
+    public boolean holdingTotem;
+    public boolean holdingGapple;
+    public boolean didSwitchThisTick;
+    public Setting<page> pageSetting = this.register(new Setting<page>("Page", page.MAIN));
+    public Setting<Mode2> offhandmode = this.register(new Setting<Object>("Offhand", (Object)Mode2.TOTEMS, v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Boolean> rightGap = this.register(new Setting<Object>("Right Click Gap", Boolean.valueOf(true), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Boolean> swordgap = this.register(new Setting<Object>("Sword Gap", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Integer> maxSwitch = this.register(new Setting<Object>("Max Switch", Integer.valueOf(10), Integer.valueOf(0), Integer.valueOf(10), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Boolean> switchmode = this.register(new Setting<Object>("KeyMode", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Bind> SwitchBind = this.register(new Setting<Object>("SwitchKey", new Bind(-1), v -> this.switchmode.getValue() != false && this.pageSetting.getValue() == page.MAIN));
+    public Setting<Float> switchHp = this.register(new Setting<Float>("SwitchHP", Float.valueOf(16.5f), Float.valueOf(0.1f), Float.valueOf(36.0f), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Float> holeHP = this.register(new Setting<Float>("HoleHP", Float.valueOf(8.0f), Float.valueOf(0.1f), Float.valueOf(36.0f), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Boolean> armorCheck = this.register(new Setting<Boolean>("ArmorCheck", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Integer> actions = this.register(new Setting<Integer>("Packets", Integer.valueOf(4), Integer.valueOf(1), Integer.valueOf(4), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Boolean> crystalCheck = this.register(new Setting<Boolean>("Crystal-Check", Boolean.valueOf(true), v -> this.pageSetting.getValue() == page.MAIN));
+    public Setting<Boolean> totemElytra = this.register(new Setting<Object>("TotemElytra", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MISC));
+    public Setting<Boolean> notfromhotbar = this.register(new Setting<Object>("NoHotbar", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MISC));
+    public Setting<Boolean> fallcheck = this.register(new Setting<Object>("FallCheck", Boolean.valueOf(true), v -> this.pageSetting.getValue() == page.MISC));
+    public Setting<Integer> falldistance = this.register(new Setting<Object>("FallDistance", Integer.valueOf(100), Integer.valueOf(1), Integer.valueOf(100), v -> this.fallcheck.getValue() != false && this.pageSetting.getValue() == page.MISC));
+    public Setting<Boolean> antiPing = this.register(new Setting<Object>("Ping Predict", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MISC));
+    public Setting<Integer> pingvalue = this.register(new Setting<Object>("Ping Value", Integer.valueOf(200), Integer.valueOf(0), Integer.valueOf(1000), v -> this.antiPing.getValue() != false && this.pageSetting.getValue() == page.MISC));
+    public Setting<Boolean> lagSwitch = this.register(new Setting<Object>("Anti Lag", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MISC));
+    public Setting<Boolean> debug = this.register(new Setting<Object>("Messages", Boolean.valueOf(false), v -> this.pageSetting.getValue() == page.MISC));
+    String s = "OffhandRewrite";
+    private boolean second;
+    private boolean switchedForHealthReason;
 
-    public Offhand() {
-        super("Offhand", "Allows you to switch up your Offhand.", Module.Category.COMBAT, true, false, false);
+    public OffhandRewrite() {
+        super("OffhandRewrite", "Allows you to switch up your Offhand.", Module.Category.COMBAT, true, false, false);
         instance = this;
+        this.taskList = new ConcurrentLinkedQueue<InventoryUtil.Task>();
+        this.timer = new TimerUtil();
+        this.secondTimer = new TimerUtil();
+        this.thirdtimer = new TimerUtil();
+        this.currentMode = Mode2.TOTEMS;
+        this.switchval = this.maxSwitch.getValue();
+        this.totems = 0;
+        this.crystals = 0;
+        this.gapples = 0;
+        this.lastTotemSlot = -1;
+        this.lastGappleSlot = -1;
+        this.lastCrystalSlot = -1;
+        this.lastObbySlot = -1;
+        this.lastWebSlot = -1;
+        this.holdingCrystal = false;
+        this.holdingTotem = false;
+        this.holdingGapple = false;
+        this.didSwitchThisTick = false;
+        this.second = false;
+        this.switchedForHealthReason = false;
     }
 
-    public static Offhand getInstance() {
+    public static OffhandRewrite getInstance() {
         if (instance == null) {
-            instance = new Offhand();
+            instance = new OffhandRewrite();
         }
         return instance;
     }
 
     @SubscribeEvent
     public void onUpdateWalkingPlayer(ProcessRightClickBlockEvent event) {
-        if (event.hand == EnumHand.MAIN_HAND && event.stack.getItem() == Items.END_CRYSTAL && Offhand.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && Offhand.mc.objectMouseOver != null && event.pos == Offhand.mc.objectMouseOver.getBlockPos()) {
+        if (event.hand == EnumHand.MAIN_HAND && event.stack.getItem() == Items.END_CRYSTAL && OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && OffhandRewrite.mc.objectMouseOver != null && event.pos == OffhandRewrite.mc.objectMouseOver.getBlockPos()) {
             event.setCanceled(true);
-            Offhand.mc.player.setActiveHand(EnumHand.OFF_HAND);
-            Offhand.mc.playerController.processRightClick(Offhand.mc.player, Offhand.mc.world, EnumHand.OFF_HAND);
+            OffhandRewrite.mc.player.setActiveHand(EnumHand.OFF_HAND);
+            OffhandRewrite.mc.playerController.processRightClick((EntityPlayer)OffhandRewrite.mc.player, (World)OffhandRewrite.mc.world, EnumHand.OFF_HAND);
+        }
+    }
+
+    @SubscribeEvent(priority=EventPriority.NORMAL, receiveCanceled=true)
+    public void onKeyInput(InputEvent.KeyInputEvent event) {
+        if (Keyboard.getEventKeyState() && this.switchmode.getValue().booleanValue() && this.SwitchBind.getValue().getKey() == Keyboard.getEventKey()) {
+            if (this.switchval < this.maxSwitch.getValue()) {
+                Mode2 newMode = (Mode2) EnumConverter.increaseEnum(this.currentMode);
+                this.offhandmode.setValue(newMode);
+                this.setMode(newMode);
+                if (this.debug.getValue().booleanValue()) {
+                    TextComponentString textComponentString = new TextComponentString(OyVey.commandManager.getClientMessage() + " \u00a7r\u00a7aSwitched offhand to " + newMode.toString());
+                    Notifications.mc.ingameGUI.getChatGUI().printChatMessageWithOptionalDeletion((ITextComponent)textComponentString, this.s.length() * 10);
+                }
+                this.doSwitch();
+            }
+            if (this.debug.getValue().booleanValue()) {
+                new TextComponentString(OyVey.commandManager.getClientMessage() + " \u00a7r\u00a7aReached switch limit interval");
+            }
         }
     }
 
     @Override
     public void onUpdate() {
         if (this.timer.passedMs(50L)) {
-            if (Offhand.mc.player != null && Offhand.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && Offhand.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL && Mouse.isButtonDown(1)) {
-                Offhand.mc.player.setActiveHand(EnumHand.OFF_HAND);
-                Offhand.mc.gameSettings.keyBindUseItem.pressed = Mouse.isButtonDown(1);
+            if (OffhandRewrite.mc.player != null && OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && OffhandRewrite.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL && Mouse.isButtonDown((int)1)) {
+                OffhandRewrite.mc.player.setActiveHand(EnumHand.OFF_HAND);
+                OffhandRewrite.mc.gameSettings.keyBindUseItem.pressed = Mouse.isButtonDown((int)1);
             }
-        } else if (Offhand.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && Offhand.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL) {
-            Offhand.mc.gameSettings.keyBindUseItem.pressed = false;
+            this.switchval = 0;
+        } else if (OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && OffhandRewrite.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL) {
+            OffhandRewrite.mc.gameSettings.keyBindUseItem.pressed = false;
         }
-        if (Offhand.nullCheck()) {
+        if (OffhandRewrite.nullCheck()) {
             return;
         }
         this.doOffhand();
@@ -96,22 +150,24 @@ public class Offhand
             this.second = false;
             this.timer.reset();
         }
+        if (this.thirdtimer.passedDms(1000.0)) {
+            this.switchval = 0;
+        }
     }
 
     @SubscribeEvent
     public void onPacketSend(PacketEvent.Send event) {
-        if (!Offhand.fullNullCheck() && Offhand.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && Offhand.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL && Offhand.mc.gameSettings.keyBindUseItem.isKeyDown()) {
-            CPacketPlayerTryUseItem packet;
+        if (!Feature.fullNullCheck() && OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE && OffhandRewrite.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL && OffhandRewrite.mc.gameSettings.keyBindUseItem.isKeyDown()) {
             if (event.getPacket() instanceof CPacketPlayerTryUseItemOnBlock) {
-                CPacketPlayerTryUseItemOnBlock packet2 = event.getPacket();
+                CPacketPlayerTryUseItemOnBlock packet2 = (CPacketPlayerTryUseItemOnBlock)event.getPacket();
                 if (packet2.getHand() == EnumHand.MAIN_HAND) {
                     if (this.timer.passedMs(50L)) {
-                        Offhand.mc.player.setActiveHand(EnumHand.OFF_HAND);
-                        Offhand.mc.player.connection.sendPacket(new CPacketPlayerTryUseItem(EnumHand.OFF_HAND));
+                        OffhandRewrite.mc.player.setActiveHand(EnumHand.OFF_HAND);
+                        OffhandRewrite.mc.player.connection.sendPacket((Packet)new CPacketPlayerTryUseItem(EnumHand.OFF_HAND));
                     }
                     event.setCanceled(true);
                 }
-            } else if (event.getPacket() instanceof CPacketPlayerTryUseItem && (packet = event.getPacket()).getHand() == EnumHand.OFF_HAND && !this.timer.passedMs(50L)) {
+            } else if (event.getPacket() instanceof CPacketPlayerTryUseItem && ((CPacketPlayerTryUseItem)event.getPacket()).getHand() == EnumHand.OFF_HAND && !this.timer.passedMs(50L)) {
                 event.setCanceled(true);
             }
         }
@@ -119,74 +175,101 @@ public class Offhand
 
     @Override
     public String getDisplayInfo() {
-        if (Offhand.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL) {
-            return "Crystals";
+        if (OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL) {
+            return "Crystal";
         }
-        if (Offhand.mc.player.getHeldItemOffhand().getItem() == Items.TOTEM_OF_UNDYING) {
-            return "Totems";
+        if (OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.TOTEM_OF_UNDYING) {
+            return "Totem";
         }
-        if (Offhand.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE) {
-            return "Gapples";
+        if (OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE) {
+            return "Gapple";
         }
         return null;
     }
 
     public void doOffhand() {
         this.didSwitchThisTick = false;
-        this.holdingCrystal = Offhand.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL;
-        this.holdingTotem = Offhand.mc.player.getHeldItemOffhand().getItem() == Items.TOTEM_OF_UNDYING;
-        this.holdingGapple = Offhand.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE;
-        this.totems = Offhand.mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == Items.TOTEM_OF_UNDYING).mapToInt(ItemStack::getCount).sum();
+        this.holdingCrystal = OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL;
+        this.holdingTotem = OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.TOTEM_OF_UNDYING;
+        this.holdingGapple = OffhandRewrite.mc.player.getHeldItemOffhand().getItem() == Items.GOLDEN_APPLE;
+        this.totems = OffhandRewrite.mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == Items.TOTEM_OF_UNDYING).mapToInt(ItemStack::getCount).sum();
         if (this.holdingTotem) {
-            this.totems += Offhand.mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == Items.TOTEM_OF_UNDYING).mapToInt(ItemStack::getCount).sum();
+            this.totems += OffhandRewrite.mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == Items.TOTEM_OF_UNDYING).mapToInt(ItemStack::getCount).sum();
         }
-        this.crystals = Offhand.mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).mapToInt(ItemStack::getCount).sum();
+        this.crystals = OffhandRewrite.mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).mapToInt(ItemStack::getCount).sum();
         if (this.holdingCrystal) {
-            this.crystals += Offhand.mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).mapToInt(ItemStack::getCount).sum();
+            this.crystals += OffhandRewrite.mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).mapToInt(ItemStack::getCount).sum();
         }
-        this.gapples = Offhand.mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == Items.GOLDEN_APPLE).mapToInt(ItemStack::getCount).sum();
+        this.gapples = OffhandRewrite.mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == Items.GOLDEN_APPLE).mapToInt(ItemStack::getCount).sum();
         if (this.holdingGapple) {
-            this.gapples += Offhand.mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == Items.GOLDEN_APPLE).mapToInt(ItemStack::getCount).sum();
+            this.gapples += OffhandRewrite.mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == Items.GOLDEN_APPLE).mapToInt(ItemStack::getCount).sum();
         }
-        this.doSwitch();
+        ++this.switchval;
+        if (this.switchval < 6) {
+            this.doSwitch();
+        }
     }
 
     public void doSwitch() {
         this.currentMode = Mode2.TOTEMS;
-        if (this.gapple.getValue() && Offhand.mc.player.getHeldItemMainhand().getItem() instanceof ItemSword && Offhand.mc.gameSettings.keyBindUseItem.isKeyDown()) {
+        if (this.swordgap.getValue().booleanValue() && OffhandRewrite.mc.player.getHealth() > this.switchHp.getValue().floatValue() && OffhandRewrite.mc.player.getHeldItemMainhand().getItem() instanceof ItemSword) {
             this.currentMode = Mode2.GAPPLES;
-        } else if (this.currentMode != Mode2.CRYSTALS && this.crystal.getValue() && (EntityUtil.isSafe(Offhand.mc.player) && EntityUtil.getHealth(Offhand.mc.player, true) > this.crystalHoleHealth.getValue() || EntityUtil.getHealth(Offhand.mc.player, true) > this.crystalHealth.getValue())) {
+        } else if (this.rightGap.getValue().booleanValue() && OffhandRewrite.mc.player.getHealth() > this.switchHp.getValue().floatValue() && OffhandRewrite.mc.gameSettings.keyBindUseItem.isKeyDown() && OffhandRewrite.mc.player.getHeldItemMainhand().getItem() instanceof ItemSword && !(OffhandRewrite.mc.currentScreen instanceof GuiContainer) && !(OffhandRewrite.mc.currentScreen instanceof GuiChat) && !(OffhandRewrite.mc.currentScreen instanceof OyVeyGui)) {
+            this.currentMode = Mode2.GAPPLES;
+        } else if (this.currentMode != Mode2.CRYSTALS && this.offhandmode.getValue() == Mode2.CRYSTALS && (EntityUtil.isSafe((Entity)OffhandRewrite.mc.player) && EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) > this.holeHP.getValue().floatValue() || EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) > this.switchHp.getValue().floatValue())) {
             this.currentMode = Mode2.CRYSTALS;
-        }
-        if (this.antiGappleFail.getValue()) {
-            if (this.currentMode == Mode2.GAPPLES && (!EntityUtil.isSafe(Util.mc.player) && EntityUtil.getHealth(Util.mc.player, true) <= this.crystalHealth.getValue() || EntityUtil.getHealth(Util.mc.player, true) <= this.crystalHoleHealth.getValue())) {
-                this.switchedForHealthReason = true;
-                this.setMode(Mode2.TOTEMS);
-            }
+        } else if (this.currentMode != Mode2.GAPPLES && this.offhandmode.getValue() == Mode2.GAPPLES && (EntityUtil.isSafe((Entity)OffhandRewrite.mc.player) && EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) > this.holeHP.getValue().floatValue() || EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) > this.switchHp.getValue().floatValue())) {
+            this.currentMode = Mode2.GAPPLES;
         }
         if (this.currentMode == Mode2.CRYSTALS && this.crystals == 0) {
+            if (this.gapples != 0) {
+                this.setMode(Mode2.GAPPLES);
+            }
             this.setMode(Mode2.TOTEMS);
         }
-        if (this.currentMode == Mode2.CRYSTALS && (!EntityUtil.isSafe(Offhand.mc.player) && EntityUtil.getHealth(Offhand.mc.player, true) <= this.crystalHealth.getValue() || EntityUtil.getHealth(Offhand.mc.player, true) <= this.crystalHoleHealth.getValue())) {
+        if (this.currentMode == Mode2.CRYSTALS && (!EntityUtil.isSafe((Entity)OffhandRewrite.mc.player) && EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) <= this.switchHp.getValue().floatValue() || EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) <= this.holeHP.getValue().floatValue())) {
             if (this.currentMode == Mode2.CRYSTALS) {
                 this.switchedForHealthReason = true;
             }
             this.setMode(Mode2.TOTEMS);
         }
-        if (this.switchedForHealthReason && (EntityUtil.isSafe(Offhand.mc.player) && EntityUtil.getHealth(Offhand.mc.player, true) > this.crystalHoleHealth.getValue() || EntityUtil.getHealth(Offhand.mc.player, true) > this.crystalHealth.getValue())) {
-            this.setMode(Mode2.CRYSTALS);
+        if (this.currentMode == Mode2.CRYSTALS && (!EntityUtil.isSafe((Entity)OffhandRewrite.mc.player) && EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) <= this.switchHp.getValue().floatValue() || EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) <= this.holeHP.getValue().floatValue())) {
+            if (this.currentMode == Mode2.CRYSTALS) {
+                this.switchedForHealthReason = true;
+            }
+            this.setMode(Mode2.TOTEMS);
+        }
+        if (OffhandRewrite.mc.player.isAirBorne && this.totemElytra.getValue().booleanValue() && OffhandRewrite.mc.player.isElytraFlying() && OffhandRewrite.mc.player.getItemStackFromSlot(EntityEquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
+            this.setMode(Mode2.TOTEMS);
+        }
+        if (OffhandRewrite.mc.player.fallDistance > (float)this.falldistance.getValue().intValue() && this.fallcheck.getValue().booleanValue()) {
+            this.setMode(Mode2.TOTEMS);
+        }
+        if (this.switchedForHealthReason && (EntityUtil.isSafe((Entity)OffhandRewrite.mc.player) && EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) > this.holeHP.getValue().floatValue() || EntityUtil.getHealth((Entity)OffhandRewrite.mc.player, true) > this.switchHp.getValue().floatValue())) {
+            this.setMode(this.currentMode);
             this.switchedForHealthReason = false;
         }
-        if (this.currentMode == Mode2.CRYSTALS && this.armorCheck.getValue() && (Offhand.mc.player.getItemStackFromSlot(EntityEquipmentSlot.CHEST).getItem() == Items.AIR || Offhand.mc.player.getItemStackFromSlot(EntityEquipmentSlot.HEAD).getItem() == Items.AIR || Offhand.mc.player.getItemStackFromSlot(EntityEquipmentSlot.LEGS).getItem() == Items.AIR || Offhand.mc.player.getItemStackFromSlot(EntityEquipmentSlot.FEET).getItem() == Items.AIR)) {
-            this.setMode(Mode2.TOTEMS);
+        if (this.currentMode == Mode2.CRYSTALS && this.armorCheck.getValue().booleanValue() && (OffhandRewrite.mc.player.getItemStackFromSlot(EntityEquipmentSlot.CHEST).getItem() == Items.AIR || OffhandRewrite.mc.player.getItemStackFromSlot(EntityEquipmentSlot.HEAD).getItem() == Items.AIR || OffhandRewrite.mc.player.getItemStackFromSlot(EntityEquipmentSlot.LEGS).getItem() == Items.AIR || OffhandRewrite.mc.player.getItemStackFromSlot(EntityEquipmentSlot.FEET).getItem() == Items.AIR)) {
+            this.setMode(this.currentMode);
         }
-        if ((this.currentMode == Mode2.CRYSTALS || this.currentMode == Mode2.GAPPLES) && Offhand.mc.player.fallDistance > this.Height.getValue() && this.fallDistance.getValue()) {
-            this.setMode(Mode2.TOTEMS);
+        if (this.crystalCheck.getValue().booleanValue() && this.calcCrystal()) {
+            if (this.debug.getValue().booleanValue()) {
+                TextComponentString textComponentString = new TextComponentString(OyVey.commandManager.getClientMessage() + " \u00a7r\u00a7aSwitched to totem because lethal crystal");
+                Notifications.mc.ingameGUI.getChatGUI().printChatMessageWithOptionalDeletion((ITextComponent)textComponentString, this.s.length() * 10);
+            }
+            this.switchedForHealthReason = true;
+            this.currentMode = Mode2.TOTEMS;
         }
-        if (Offhand.mc.currentScreen instanceof GuiContainer && !(Offhand.mc.currentScreen instanceof GuiInventory)) {
+        if (OffhandRewrite.mc.currentScreen instanceof GuiContainer && !(OffhandRewrite.mc.currentScreen instanceof GuiInventory)) {
             return;
         }
-        Item currentOffhandItem = Offhand.mc.player.getHeldItemOffhand().getItem();
+        if (this.antiPing.getValue().booleanValue() && (PingBypass.getInstance().isConnected() ? PingBypass.getInstance().getServerPing() : (long)OyVey.serverManager.getPing()) > (long)this.pingvalue.getValue().intValue()) {
+            this.setMode(Mode2.TOTEMS);
+        }
+        if (this.lagSwitch.getValue().booleanValue() && OyVey.serverManager.isServerNotResponding()) {
+            this.setMode(Mode2.TOTEMS);
+        }
+        Item currentOffhandItem = OffhandRewrite.mc.player.getHeldItemOffhand().getItem();
         switch (this.currentMode) {
             case TOTEMS: {
                 if (this.totems <= 0 || this.holdingTotem) break;
@@ -207,6 +290,7 @@ public class Offhand
                 this.lastCrystalSlot = InventoryUtil.findItemInventorySlot(Items.END_CRYSTAL, false);
                 int lastSlot = this.getLastSlot(currentOffhandItem, this.lastCrystalSlot);
                 this.putItemInOffhand(this.lastCrystalSlot, lastSlot);
+                break;
             }
         }
         for (int i = 0; i < this.actions.getValue(); ++i) {
@@ -253,11 +337,24 @@ public class Offhand
         this.currentMode = this.currentMode == mode ? Mode2.TOTEMS : mode;
     }
 
-    public enum Mode2 {
+    public boolean calcCrystal() {
+        for (Entity t : OffhandRewrite.mc.world.loadedEntityList) {
+            if (!(t instanceof EntityEnderCrystal) || !(OffhandRewrite.mc.player.getDistanceSq(t.getPosition()) <= 36.0) || !(DamageUtil2.calculateDamage(t, (Entity)OffhandRewrite.mc.player) >= OffhandRewrite.mc.player.getHealth())) continue;
+            return true;
+        }
+        return false;
+    }
+
+    public static enum page {
+        MAIN,
+        MISC;
+
+    }
+
+    public static enum Mode2 {
         TOTEMS,
         GAPPLES,
-        CRYSTALS
+        CRYSTALS;
 
     }
 }
-
