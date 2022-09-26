@@ -3,6 +3,7 @@ package me.derp.quantum.features.modules.combat;
 import me.derp.quantum.Quantum;
 import me.derp.quantum.event.events.*;
 import me.derp.quantum.features.modules.Module;
+import me.derp.quantum.features.modules.combat.TooBeeCrystalAura;
 import me.derp.quantum.features.modules.client.ClickGui;
 import me.derp.quantum.features.setting.Setting;
 import me.derp.quantum.features.modules.misc.AutoGG;
@@ -203,7 +204,7 @@ public class CrystalAura
     @SubscribeEvent
     public void onBlockEvent(final BlockEvent event) {
         if (cityPredict.getValue() && getTarget() != null) {
-            if (event.pos == EntityUtil.is_cityable(getTarget(), opPlace.getValue()))      placeCrystalOnBlock(event.pos.down(), TooBeeCrystalAura.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND, false, false, this.switchMode.getValue() == SwitchMode.Silent);
+            if (event.pos == EntityUtil.is_cityable(getTarget(), opPlace.getValue()))      TooBeeCrystalAura.placeCrystalOnBlock(event.pos.down(), CrystalAura.mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND, false, false, this.switchMode.getValue() == SwitchMode.Silent);
         }
     }
 
