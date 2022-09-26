@@ -1,49 +1,66 @@
 package me.derp.quantum.features.modules.misc;
 
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraft.network.play.client.CPacketChatMessage;
 import me.derp.quantum.event.events.PacketEvent;
+import me.derp.quantum.features.command.Command;
+import me.derp.quantum.features.modules.Module;
 import me.derp.quantum.features.setting.Setting;
 import me.derp.quantum.util.Timer;
-import me.derp.quantum.features.modules.Module;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.play.client.CPacketChatMessage;
+import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-public class ChatModifier extends Module
-{
-    private static ChatModifier INSTANCE;
-    private final Timer timer;
-    public Setting<Suffix> suffix;
-    
+public class ChatModifier
+        extends Module {
+    public Setting<Suffix> suffix = this.register(new Setting<>("Suffix", Suffix.NONE, "Your Suffix."));
+    public Setting<Boolean> clean = this.register(new Setting<>("CleanChat", Boolean.FALSE, "Cleans your chat"));
+    public Setting<Boolean> infinite = this.register(new Setting<>("Infinite", Boolean.FALSE, "Makes your chat infinite."));
+    public Setting<Boolean> autoQMain = this.register(new Setting<>("AutoQMain", Boolean.FALSE, "Spams AutoQMain"));
+    public Setting<Boolean> qNotification = this.register(new Setting<Object>("QNotification", Boolean.FALSE, v -> this.autoQMain.getValue()));
+    public Setting<Integer> qDelay = this.register(new Setting<Object>("QDelay", 9, 1, 90, v -> this.autoQMain.getValue()));
+    private final Timer timer = new Timer();
+    private static ChatModifier INSTANCE = new ChatModifier();
+
     public ChatModifier() {
-        super("ChatSuffix", "Modifies your chat", Category.MISC, true, false, false);
-        this.timer = new Timer();
-        this.suffix = (Setting<Suffix>)this.register(new Setting("Suffix", (T)Suffix.MCDONALDS, "Your Suffix."));
+        super("Chat", "Modifies your chat", Module.Category.MISC, true, false, false);
         this.setInstance();
     }
-    
-    public static ChatModifier getInstance() {
-        if (ChatModifier.INSTANCE == null) {
-            ChatModifier.INSTANCE = new ChatModifier();
-        }
-        return ChatModifier.INSTANCE;
-    }
-    
+
     private void setInstance() {
-        ChatModifier.INSTANCE = this;
+        INSTANCE = this;
     }
-    
+
+    public static ChatModifier getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new ChatModifier();
+        }
+        return INSTANCE;
+    }
+
+    @Override
+    public void onUpdate() {
+        if (this.autoQMain.getValue()) {
+            if (!this.shouldSendMessage(ChatModifier.mc.player)) {
+                return;
+            }
+            if (this.qNotification.getValue()) {
+                Command.sendMessage("<AutoQueueMain> Sending message: /queue main");
+            }
+            ChatModifier.mc.player.sendChatMessage("/queue main");
+            this.timer.reset();
+        }
+    }
+
     @SubscribeEvent
-    public void onPacketSend(final PacketEvent.Send event) {
+    public void onPacketSend(PacketEvent.Send event) {
         if (event.getStage() == 0 && event.getPacket() instanceof CPacketChatMessage) {
-            final CPacketChatMessage packet = event.getPacket();
+            CPacketChatMessage packet = event.getPacket();
             String s = packet.getMessage();
             if (s.startsWith("/")) {
                 return;
             }
-            switch (this.suffix.getValue()) {
-                case MCDONALDS: {
-                    s += " \u23d0 \u1d0d\u1d04\u1d05\u1d0f\u0274\u1d00\u029f\u1d05\ua731 \u1d04\u029f\u026a\u1d07\u0274\u1d1b";
-                    break;
-                }
+            if (this.suffix.getValue() == Suffix.Quantum) {
+                s = s + " \u23d0 \uff51\uff55\uff41\uff4e\uff54\uff55\uff4d\u3000 \uff43\uff4f\uff4e\uff54\uff49\uff4e\uff55\uff45\uff44";
             }
             if (s.length() >= 256) {
                 s = s.substring(0, 256);
@@ -51,13 +68,22 @@ public class ChatModifier extends Module
             packet.message = s;
         }
     }
-    
-    static {
-        ChatModifier.INSTANCE = new ChatModifier();
+
+
+    private boolean shouldSendMessage(EntityPlayer player) {
+        if (player.dimension != 1) {
+            return false;
+        }
+        if (!this.timer.passedS(this.qDelay.getValue())) {
+            return false;
+        }
+        return player.getPosition().equals(new Vec3i(0, 240, 0));
     }
-    
-    public enum Suffix
-    {
-        Quantum++;
+
+    public
+    enum Suffix {
+        NONE,
+        Quantum
+
     }
 }
