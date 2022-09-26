@@ -4,10 +4,6 @@ this client was made because zane liked quantum!
 
 
 original quantum | https://github.com/fan4145/quantum-src-releases
-
-btw the jar is in actions for the people who dont wanna build.
-
-
 ## Installing
 
 1. Download the latest version of [Minecraft Forge](https://files.minecraftforge.net/) for the corresponding 
