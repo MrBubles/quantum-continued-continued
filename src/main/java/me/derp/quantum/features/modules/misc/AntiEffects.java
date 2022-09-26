@@ -42,6 +42,10 @@ public class AntiEffects extends Module {
             AntiEffects.mc.player.removePotionEffect(MobEffects.NAUSEA);
             if (this.notify.getValue().booleanValue()) {
             Command.sendMessage("Blocked Nausea Effect.");
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
