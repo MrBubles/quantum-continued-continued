@@ -6,7 +6,7 @@ this client was made because zane liked quantum!
 original quantum | https://github.com/fan4145/quantum-src-releases
 ## Installing
 
-1. Download the latest version of [Minecraft Forge](https://files.minecraftforge.net/) for the corresponding 
+1. Download the latest version of [Minecraft Forge](https://maven.minecraftforge.net/net/minecraftforge/forge/1.12.2-14.23.5.2860/forge-1.12.2-14.23.5.2860-installer.jar) for the corresponding 
 Quantum Minecraft version (1.12.2).
 2. Download the latest Quantum build by going to the [releases](https://github.com/MrBubblegum/quantum-continued-continued/releases) section.
 Do NOT install the jar that contains `sources`. That one contains the source code and isn't compiled.
