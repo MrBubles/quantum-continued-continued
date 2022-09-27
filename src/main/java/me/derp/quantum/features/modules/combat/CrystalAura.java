@@ -202,6 +202,7 @@ public class CrystalAura
     public void onDisable() {
         this.rotating = false;
     }
+
     @SubscribeEvent
     public void onPlayerWalkingUpdated(UpdateWalkingPlayerEvent event) {
         if (event.getStage() == 0) {
@@ -218,10 +219,12 @@ public class CrystalAura
 
     @Override
     public void onTick() {
-        this.onCrystal();
-    if (fastplace.getValue() && CrystalAura.mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL) {
-    CrystalAura.mc.rightClickDelayTimer = 0;
+        if (fullNullCheck()) return;
+        // made it apply to offhand :)
+        if (fastplace.getValue() && (mc.player.getHeldItemMainhand().getItem() == Items.END_CRYSTAL || mc.player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL)) {
+            CrystalAura.mc.rightClickDelayTimer = 0;
         }
+        this.onCrystal();
     }
 
     @Override

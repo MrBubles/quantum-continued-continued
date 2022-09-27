@@ -14,7 +14,7 @@ public class Multithread {
         POOL.execute(runnable);
     }
 
-    public static final ExecutorService POOL = Executors.newFixedThreadPool(100, new ThreadFactory() {
+    public static final ExecutorService POOL = Executors.newFixedThreadPool(2, new ThreadFactory() {
         final AtomicInteger counter = new AtomicInteger(0);
 
         public Thread newThread(Runnable r) {
