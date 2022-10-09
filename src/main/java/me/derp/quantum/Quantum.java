@@ -110,6 +110,7 @@ public class Quantum {
         rotationManagerNew = null;
         textManager = null;
         threadManager = null;
+        safetyManager = null;
         LOGGER.info("Quantum unloaded!\n");
     }
 
